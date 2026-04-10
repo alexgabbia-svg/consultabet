@@ -3,112 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Apostas Regulamentadas</title>
+    <title>Transparência Apostas | Federal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #050505;
-            color: #e2e2e2;
-            font-family: 'Inter', sans-serif;
-        }
-        .neon-border {
-            box-shadow: 0 0 10px #a855f7, 0 0 20px #7c3aed;
-        }
-        .neon-text {
-            text-shadow: 0 0 8px #a855f7;
-        }
-        .glass {
-            background: rgba(20, 20, 30, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(168, 85, 247, 0.2);
-        }
-        .gradient-bg {
-            background: radial-gradient(circle at top right, #2d1b4e 0%, #050505 50%);
-        }
+        body { background: #050508 radial-gradient(circle at top, #1a0b2e 0%, #050508 70%); font-family: 'Rajdhani', sans-serif; color: #f3f4f6; }
+        .neon-purple { color: #bc13fe; text-shadow: 0 0 12px #bc13fe; }
+        .neon-border { border: 1px solid #bc13fe; box-shadow: 0 0 15px rgba(188, 19, 254, 0.4); }
+        .glass-card { background: rgba(18, 18, 24, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .font-cyber { font-family: 'Orbitron', sans-serif; }
     </style>
 </head>
-<body class="min-h-screen gradient-bg flex flex-col items-center justify-center p-6">
+<body class="min-h-screen flex flex-col items-center p-6 md:p-16">
 
-    <div class="max-w-3xl w-full text-center mb-12">
-        <h1 class="text-5xl font-bold mb-4 neon-text text-purple-500 uppercase tracking-tighter">BetCheck Federal</h1>
-        <p class="text-gray-400 text-lg">Verifique se uma plataforma de apostas está autorizada pelo Governo Federal.</p>
+    <header class="text-center mb-16">
+        <h1 class="text-5xl md:text-7xl font-cyber font-bold tracking-tighter mb-4 italic">
+            SIGAP <span class="neon-purple">CHECK</span>
+        </h1>
+        <p class="text-gray-400 text-lg uppercase tracking-widest font-semibold">Consulta Nacional de Empresas Regulamentadas</p>
+    </header>
+
+    <div class="w-full max-w-3xl">
+        <div class="glass-card p-2 rounded-2xl flex items-center shadow-2xl">
+            <input type="text" id="searchInput" 
+                   placeholder="Digite Marca (ex: Bet365), CNPJ ou Razão Social..." 
+                   class="w-full bg-transparent p-5 outline-none text-white text-xl md:text-2xl placeholder-gray-600 font-bold"
+                   onkeypress="if(event.key === 'Enter') buscar()">
+            <button onclick="buscar()" 
+                    class="bg-purple-700 hover:bg-purple-600 text-white px-10 py-5 rounded-xl font-bold transition-all font-cyber tracking-widest">
+                BUSCAR
+            </button>
+        </div>
+        <p class="text-center text-gray-500 text-xs mt-6 italic uppercase tracking-widest">Base de dados atualizada conforme planilhas oficiais 2024-2026</p>
     </div>
 
-    <!-- Barra de Busca -->
-    <div class="max-w-2xl w-full glass p-2 rounded-2xl flex items-center mb-8 neon-border">
-        <input type="text" id="searchInput" placeholder="CNPJ, Razão Social ou Nome Fantasia..." 
-               class="w-full bg-transparent p-4 outline-none text-white text-lg" onkeypress="handleEnter(event)">
-        <button onclick="buscarEmpresa()" class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-4 rounded-xl font-bold transition-all">
-            PESQUISAR
-        </button>
-    </div>
-
-    <!-- Container de Resultado -->
-    <div id="resultArea" class="max-w-2xl w-full hidden">
-        <!-- O resultado será injetado aqui via JS -->
-    </div>
-
-    <footer class="mt-20 text-gray-600 text-sm">
-        Dados atualizados conforme Portaria SPA/MF 2024-2026.
-    </footer>
+    <div id="resultArea" class="w-full max-w-3xl mt-16 transition-all duration-500"></div>
 
     <script>
-        let baseDados = [];
+        let empresas = [];
 
-        // Carrega os dados do seu JSON (você fará o upload desse dados.json no github)
         fetch('dados.json')
             .then(res => res.json())
-            .then(data => baseDados = data);
+            .then(data => empresas = data);
 
-        function handleEnter(e) {
-            if (e.key === 'Enter') buscarEmpresa();
+        function normalize(txt) {
+            return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w]/g, '');
         }
 
-        function limparCnpj(cnpj) {
-            return cnpj.replace(/\D/g, '');
-        }
+        function buscar() {
+            const termo = document.getElementById('searchInput').value;
+            const termoLimpo = normalize(termo);
+            const container = document.getElementById('resultArea');
 
-        function buscarEmpresa() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const inputLimpo = limparCnpj(input);
-            const resultArea = document.getElementById('resultArea');
-            
-            resultArea.classList.remove('hidden');
-            resultArea.innerHTML = ""; // Limpa busca anterior
+            if (termoLimpo.length < 2) return;
 
-            // Busca na base de dados
-            const resultado = baseDados.find(item => {
-                return (
-                    limparCnpj(item.cnpj).includes(inputLimpo && inputLimpo !== "" ? inputLimpo : "XYZ789") || 
-                    item.razao_social.toLowerCase().includes(input) || 
-                    item.marcas.toLowerCase().includes(input)
-                );
-            });
+            const match = empresas.find(e => 
+                normalize(e.cnpj).includes(termoLimpo) || 
+                normalize(e.razao_social).includes(termoLimpo) || 
+                normalize(e.marcas).includes(termoLimpo)
+            );
 
-            if (resultado) {
-                resultArea.innerHTML = `
-                    <div class="glass p-8 rounded-3xl border-l-8 border-green-500 animate-pulse">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="bg-green-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase">Regulamentada</span>
+            if (match) {
+                container.innerHTML = `
+                    <div class="glass-card p-10 rounded-3xl border-l-8 border-purple-500 animate-pulse">
+                        <div class="flex items-center gap-3 mb-8">
+                            <span class="w-3 h-3 bg-green-400 rounded-full shadow-[0_0_15px_#4ade80]"></span>
+                            <span class="text-green-400 font-bold uppercase tracking-tighter">✔ Regulamentada pelo Governo Federal</span>
                         </div>
-                        <h2 class="text-3xl font-bold text-white mb-2">${resultado.razao_social}</h2>
-                        <p class="text-gray-400 mb-4">CNPJ: ${resultado.cnpj}</p>
-                        <div class="border-t border-gray-800 pt-4">
-                            <p class="text-purple-400 font-bold">Portaria de Autorização:</p>
-                            <p class="text-white text-lg">${resultado.portaria}</p>
-                        </div>
-                        <div class="mt-4">
-                            <p class="text-gray-500 text-sm italic">Marcas: ${resultado.marcas}</p>
+                        <h2 class="text-4xl md:text-5xl font-bold mb-3">${match.razao_social}</h2>
+                        <p class="text-purple-400 text-2xl font-bold mb-8">${match.cnpj}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-white/10 pt-8">
+                            <div>
+                                <span class="text-gray-500 text-xs uppercase block mb-2 font-bold tracking-widest">Portaria de Autorização</span>
+                                <span class="text-white text-xl font-bold italic leading-tight">${match.portaria}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 text-xs uppercase block mb-2 font-bold tracking-widest">Marcas do Grupo</span>
+                                <span class="text-white text-xl font-bold italic leading-tight">${match.marcas}</span>
+                            </div>
                         </div>
                     </div>
                 `;
             } else {
-                resultArea.innerHTML = `
-                    <div class="glass p-8 rounded-3xl border-l-8 border-red-600">
-                        <span class="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase">Não Encontrada</span>
-                        <h2 class="text-2xl font-bold text-white mt-4">Atenção!</h2>
-                        <p class="text-gray-400 mt-2">Esta empresa não consta na lista oficial de autorizações nacionais para 2025/2026.</p>
+                container.innerHTML = `
+                    <div class="glass-card p-10 rounded-3xl border-l-8 border-red-600">
+                        <h2 class="text-red-600 font-cyber text-3xl font-bold mb-4">NÃO LOCALIZADA</h2>
+                        <p class="text-gray-400 text-lg">Esta marca ou CNPJ não foi encontrado na lista de empresas autorizadas a operar nacionalmente a partir de 2025.</p>
                     </div>
                 `;
             }
