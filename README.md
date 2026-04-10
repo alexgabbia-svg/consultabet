@@ -1,0 +1,2 @@
+# consultabet
+Consultar Bets Regulamentadas
